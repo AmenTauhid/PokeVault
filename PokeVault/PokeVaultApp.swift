@@ -2,16 +2,33 @@
 //  PokeVaultApp.swift
 //  PokeVault
 //
-//  Created by Ayman Tauhid on 2025-03-28.
-//
 
 import SwiftUI
+import CoreData
 
 @main
 struct PokeVaultApp: App {
+    let persistenceController = PersistenceController.shared
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LandingView()
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+        }
+    }
+}
+
+class PersistenceController {
+    static let shared = PersistenceController()
+    
+    let container: NSPersistentContainer
+    
+    init() {
+        container = NSPersistentContainer(name: "PokeVault")
+        container.loadPersistentStores { (_, error) in
+            if let error = error {
+                fatalError("Unresolved error \(error.localizedDescription)")
+            }
         }
     }
 }
