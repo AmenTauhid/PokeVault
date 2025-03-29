@@ -1,0 +1,14 @@
+
+{
+  "API_KEY": "AIzaSyCCau_4h-K6shu8gAgdfUQ3pVPSfxDCfGE",
+  "GCM_SENDER_ID": "265672235772",
+  "PROJECT_ID": "pokevault-ecc70",
+  "STORAGE_BUCKET": "pokevault-ecc70.firebasestorage.app",
+  "BUNDLE_ID": "omario.PokeVault",
+  "GOOGLE_APP_ID": "1:265672235772:ios:b0889b9ff6d1c55f621579",
+  "IS_ADS_ENABLED": false,
+  "IS_ANALYTICS_ENABLED": false,
+  "IS_APPINVITE_ENABLED": true,
+  "IS_GCM_ENABLED": true,
+  "IS_SIGNIN_ENABLED": true
+}

@@ -11,6 +11,7 @@ import FirebaseCore
 @main
 struct PokeVaultApp: App {
     @State private var isFirebaseInitialized = false
+    @State private var initializationError: String? = nil
     
     var body: some Scene {
         WindowGroup {
@@ -18,22 +19,36 @@ struct PokeVaultApp: App {
                 if isFirebaseInitialized {
                     ContentView()
                 } else {
+                    // Loading screen while Firebase initializes
                     VStack {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                         Text("Loading...")
                             .padding()
+                        
+                        if let error = initializationError {
+                            Text("Error: \(error)")
+                                .foregroundColor(.red)
+                                .font(.caption)
+                                .padding()
+                        }
                     }
                 }
             }
             .task {
                 do {
+                    // Load Firebase configuration from the JSON file
                     try await KeyConstants.loadAPIKeys()
                     isFirebaseInitialized = true
                 } catch {
                     print("Error initializing Firebase: \(error.localizedDescription)")
-
-                    isFirebaseInitialized = true
+                    initializationError = error.localizedDescription
+                    
+                    // Wait a moment then proceed to the app anyway
+                    // This allows users to at least see the login screen
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isFirebaseInitialized = true
+                    }
                 }
             }
         }
