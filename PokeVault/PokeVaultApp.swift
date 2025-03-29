@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import CoreData
 
 @main
 struct PokeVaultApp: App {
@@ -50,6 +51,21 @@ struct PokeVaultApp: App {
                         isFirebaseInitialized = true
                     }
                 }
+            }
+        }
+    }
+}
+
+class PersistenceController {
+    static let shared = PersistenceController()
+    
+    let container: NSPersistentContainer
+    
+    init() {
+        container = NSPersistentContainer(name: "PokeVault")
+        container.loadPersistentStores { (_, error) in
+            if let error = error {
+                fatalError("Unresolved error \(error.localizedDescription)")
             }
         }
     }
