@@ -4,8 +4,11 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct CollectionView: View {
+    @StateObject private var authViewModel = AuthViewModel()
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -24,6 +27,27 @@ struct CollectionView: View {
                             CardView(cardName: "Pokémon Card \(index)")
                         }
                     }
+                    Text("You are logged in as:")
+                        .padding(.top)
+                    
+                    if let email = authViewModel.user?.email {
+                        Text(email)
+                            .font(.headline)
+                    }
+                    
+                    Button(action: {
+                        authViewModel.signOut()
+                    }) {
+                        Text("Sign Out")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.top, 30)
+                    .padding(.horizontal)
                 }
             }
         }
