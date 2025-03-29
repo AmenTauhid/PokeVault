@@ -8,15 +8,13 @@ import Firebase
 import FirebaseFirestore
 import FirebaseAuth
 
-// Firebase Model
 struct PokemonCard: Identifiable, Codable {
-    @DocumentID var id: String?  // Firestore document ID
+    @DocumentID var id: String?
     let name: String
     let imageUrl: String
     let releaseDate: String
     let dateAdded: Date
     
-    // Custom init to set default dateAdded
     init(id: String? = nil, name: String, imageUrl: String, releaseDate: String, dateAdded: Date = Date()) {
         self.id = id
         self.name = name
@@ -26,7 +24,6 @@ struct PokemonCard: Identifiable, Codable {
     }
 }
 
-// Struct for search results
 struct SearchedPokemonCard {
     let name: String
     let imageUrl: String
@@ -60,12 +57,10 @@ class FirebaseManager: ObservableObject {
     private var userId: String? { Auth.auth().currentUser?.uid }
     private var listener: ListenerRegistration?
     
-    // Initialize and setup listener
     init() {
         setupAuthListener()
     }
     
-    // Listen for auth state changes and fetch collection when user is logged in
     private func setupAuthListener() {
         Auth.auth().addStateDidChangeListener { [weak self] (_, user) in
             if user != nil {
@@ -77,7 +72,6 @@ class FirebaseManager: ObservableObject {
         }
     }
     
-    // Clear listener when not needed
     private func removeListener() {
         listener?.remove()
         listener = nil
@@ -93,7 +87,6 @@ class FirebaseManager: ObservableObject {
         
         let collectionRef = db.collection("users").document(userId).collection("pokemon_cards")
         
-        // Create data dictionary with all card fields including dateAdded
         let cardData: [String: Any] = [
             "name": card.name,
             "imageUrl": card.imageUrl,
@@ -110,7 +103,6 @@ class FirebaseManager: ObservableObject {
                     self?.errorMessage = "Failed to add card: \(error.localizedDescription)"
                 } else {
                     print("Card successfully added to Firestore!")
-                    // No need to manually fetch again as we're using a listener
                 }
             }
         }
@@ -124,13 +116,11 @@ class FirebaseManager: ObservableObject {
         
         isLoading = true
         
-        // Remove any existing listener
         removeListener()
         
         let collectionRef = db.collection("users").document(userId).collection("pokemon_cards")
             .order(by: "dateAdded", descending: true)
         
-        // Setup a real-time listener
         listener = collectionRef.addSnapshotListener { [weak self] snapshot, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
@@ -152,11 +142,9 @@ class FirebaseManager: ObservableObject {
     
     func deleteCard(at indexSet: IndexSet) {
         guard let userId = userId else { return }
-        
-        // Get the cards to delete from the indexSet
+
         let cardsToDelete = indexSet.map { collection[$0] }
         
-        // Delete each card
         for card in cardsToDelete {
             if let id = card.id {
                 let docRef = db.collection("users").document(userId).collection("pokemon_cards").document(id)
@@ -176,13 +164,11 @@ class FirebaseManager: ObservableObject {
     }
 }
 
-// Search ViewModel
 class PokemonSearchViewModel: ObservableObject {
     @Published var cards: [SearchedPokemonCard] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
-    // Your API key should be stored securely, not hardcoded
     private let apiKey = "YOUR-API-KEY"
 
     func searchCards(query: String) {
@@ -236,7 +222,6 @@ class PokemonSearchViewModel: ObservableObject {
     }
 }
 
-// Main Collection View
 struct CollectionView: View {
     @StateObject private var firebaseManager = FirebaseManager()
     @State private var isSearchPagePresented = false
@@ -315,7 +300,6 @@ struct CollectionView: View {
                     title: Text("Not Logged In"),
                     message: Text("You need to login first to manage your collection."),
                     primaryButton: .default(Text("Login"), action: {
-                        // Handle login here
                     }),
                     secondaryButton: .cancel()
                 )
@@ -355,7 +339,6 @@ struct CollectionView: View {
     }
 }
 
-// Search Page
 struct SearchPage: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var searchQuery = ""
