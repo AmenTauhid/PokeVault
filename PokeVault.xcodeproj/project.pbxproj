@@ -19,29 +19,35 @@
 		DC8F849D2D97999800184C6F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F849C2D97999800184C6F /* FirebaseMessaging */; };
 		DC8F849F2D97999800184C6F /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F849E2D97999800184C6F /* FirebaseStorage */; };
 		DC8F84A12D97999800184C6F /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F84A02D97999800184C6F /* FirebaseStorageCombine-Community */; };
+		DC8F84AE2D979E7100184C6F /* KeyConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC8F84AD2D979E7100184C6F /* KeyConstants.swift */; };
+		DC8F84B92D97A70500184C6F /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = DC8F84B82D97A70200184C6F /* .gitignore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		17EFEC122D9792CD00D00C83 /* PokeVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PokeVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC8F84AD2D979E7100184C6F /* KeyConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyConstants.swift; sourceTree = "<group>"; };
+		DC8F84B82D97A70200184C6F /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		64BA6C752D98E5D0000D45F9 /* Exceptions for "PokeVault" folder in "PokeVault" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			assetTagsByRelativePath = {
-				Keys/APIKeys.json = (APIKeys, );
-			};
-			target = 17EFEC112D9792CD00D00C83 /* PokeVault */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		17EFEC142D9792CD00D00C83 /* PokeVault */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				64BA6C752D98E5D0000D45F9 /* Exceptions for "PokeVault" folder in "PokeVault" target */,
-			);
 			path = PokeVault;
+			sourceTree = "<group>";
+		};
+		DC8F84862D97989A00184C6F /* ViewPages */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ViewPages;
+			sourceTree = "<group>";
+		};
+		DC8F84A62D979A3B00184C6F /* ViewModel */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		DC8F84BA2D97A76900184C6F /* Keys */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Keys;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -72,6 +78,11 @@
 		17EFEC092D9792CD00D00C83 = {
 			isa = PBXGroup;
 			children = (
+				DC8F84BA2D97A76900184C6F /* Keys */,
+				DC8F84B82D97A70200184C6F /* .gitignore */,
+				DC8F84AD2D979E7100184C6F /* KeyConstants.swift */,
+				DC8F84A62D979A3B00184C6F /* ViewModel */,
+				DC8F84862D97989A00184C6F /* ViewPages */,
 				17EFEC142D9792CD00D00C83 /* PokeVault */,
 				17EFEC132D9792CD00D00C83 /* Products */,
 			);
@@ -102,6 +113,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				17EFEC142D9792CD00D00C83 /* PokeVault */,
+				DC8F84862D97989A00184C6F /* ViewPages */,
+				DC8F84A62D979A3B00184C6F /* ViewModel */,
+				DC8F84BA2D97A76900184C6F /* Keys */,
 			);
 			name = PokeVault;
 			packageProductDependencies = (
@@ -167,6 +181,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC8F84B92D97A70500184C6F /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,6 +192,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC8F84AE2D979E7100184C6F /* KeyConstants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
