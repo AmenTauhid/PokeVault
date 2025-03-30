@@ -19,10 +19,12 @@
 		DC8F849D2D97999800184C6F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F849C2D97999800184C6F /* FirebaseMessaging */; };
 		DC8F849F2D97999800184C6F /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F849E2D97999800184C6F /* FirebaseStorage */; };
 		DC8F84A12D97999800184C6F /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F84A02D97999800184C6F /* FirebaseStorageCombine-Community */; };
+		DC9245542D99799000061C6C /* pokemon_with_prices.csv in Resources */ = {isa = PBXBuildFile; fileRef = DC9245532D99799000061C6C /* pokemon_with_prices.csv */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		17EFEC122D9792CD00D00C83 /* PokeVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PokeVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC9245532D99799000061C6C /* pokemon_with_prices.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = pokemon_with_prices.csv; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -59,6 +61,7 @@
 		17EFEC092D9792CD00D00C83 = {
 			isa = PBXGroup;
 			children = (
+				DC9245532D99799000061C6C /* pokemon_with_prices.csv */,
 				17EFEC142D9792CD00D00C83 /* PokeVault */,
 				17EFEC132D9792CD00D00C83 /* Products */,
 			);
@@ -154,6 +157,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC9245542D99799000061C6C /* pokemon_with_prices.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
