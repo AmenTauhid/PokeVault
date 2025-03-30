@@ -38,8 +38,16 @@ struct HomeView: View {
                     .tabItem {
                         Label("Friends", systemImage: "person.2.fill")
                     }
+                AccountView(authViewModel: authViewModel)
+                    .tabItem {
+                        Label("Account", systemImage: "person.circle.fill")
+                    }
             }
             .accentColor(.red)
         }
     }
+}
+
+#Preview {
+    ContentView()
 }
