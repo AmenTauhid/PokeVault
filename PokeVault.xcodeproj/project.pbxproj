@@ -21,12 +21,16 @@
 		DC8F84A12D97999800184C6F /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = DC8F84A02D97999800184C6F /* FirebaseStorageCombine-Community */; };
 		DC8F84AE2D979E7100184C6F /* KeyConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC8F84AD2D979E7100184C6F /* KeyConstants.swift */; };
 		DC8F84B92D97A70500184C6F /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = DC8F84B82D97A70200184C6F /* .gitignore */; };
+		DC9244942D98A4F800061C6C /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9244932D98A4F800061C6C /* FirebaseManager.swift */; };
+		DC9244972D98AAA200061C6C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DC9244962D98AAA200061C6C /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		17EFEC122D9792CD00D00C83 /* PokeVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PokeVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC8F84AD2D979E7100184C6F /* KeyConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyConstants.swift; sourceTree = "<group>"; };
 		DC8F84B82D97A70200184C6F /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		DC9244932D98A4F800061C6C /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
+		DC9244962D98AAA200061C6C /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -91,6 +95,7 @@
 		17EFEC092D9792CD00D00C83 = {
 			isa = PBXGroup;
 			children = (
+				DC9244932D98A4F800061C6C /* FirebaseManager.swift */,
 				DC8F84BA2D97A76900184C6F /* Keys */,
 				DC8F84B82D97A70200184C6F /* .gitignore */,
 				DC8F84AD2D979E7100184C6F /* KeyConstants.swift */,
@@ -98,6 +103,7 @@
 				DC8F84862D97989A00184C6F /* ViewPages */,
 				17EFEC142D9792CD00D00C83 /* PokeVault */,
 				17EFEC132D9792CD00D00C83 /* Products */,
+				DC9244962D98AAA200061C6C /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -195,6 +201,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC8F84B92D97A70500184C6F /* .gitignore in Resources */,
+				DC9244972D98AAA200061C6C /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +212,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC9244942D98A4F800061C6C /* FirebaseManager.swift in Sources */,
 				DC8F84AE2D979E7100184C6F /* KeyConstants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

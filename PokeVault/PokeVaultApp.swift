@@ -2,25 +2,42 @@
 //  PokeVaultApp.swift
 //  PokeVault
 //
-//  Created by Ayman Tauhid on 2025-03-28.
-//
 
 import SwiftUI
 import FirebaseCore
 import CoreData
 
+// App Delegate for Firebase initialization
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Initialize Firebase on the main thread
+        FirebaseApp.configure()
+        
+        // Disable swizzling to avoid background thread issues
+        // Add this to Info.plist:
+        // <key>FirebaseAppDelegateProxyEnabled</key>
+        // <false/>
+        
+        return true
+    }
+}
+
 @main
 struct PokeVaultApp: App {
-    @State private var isFirebaseInitialized = false
+    // Register app delegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
+    @State private var isAppReady = false
     @State private var initializationError: String? = nil
     
     var body: some Scene {
         WindowGroup {
             Group {
-                if isFirebaseInitialized {
+                if isAppReady {
                     ContentView()
                 } else {
-                    // Loading screen while Firebase initializes
+                    // Loading screen while app initializes
                     VStack {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
@@ -36,20 +53,11 @@ struct PokeVaultApp: App {
                     }
                 }
             }
-            .task {
-                do {
-                    // Load Firebase configuration from the JSON file
-                    try await KeyConstants.loadAPIKeys()
-                    isFirebaseInitialized = true
-                } catch {
-                    print("Error initializing Firebase: \(error.localizedDescription)")
-                    initializationError = error.localizedDescription
-                    
-                    // Wait a moment then proceed to the app anyway
-                    // This allows users to at least see the login screen
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        isFirebaseInitialized = true
-                    }
+            .onAppear {
+                // We don't need to initialize Firebase here since it's done in AppDelegate
+                // Just set app as ready after a short delay to allow Firebase to fully initialize
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    isAppReady = true
                 }
             }
         }

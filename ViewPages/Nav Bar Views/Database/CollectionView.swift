@@ -30,7 +30,7 @@ struct CollectionView: View {
                     Text("You are logged in as:")
                         .padding(.top)
                     
-                    if let email = authViewModel.user?.email {
+                    if let email = Auth.auth().currentUser?.email {
                         Text(email)
                             .font(.headline)
                     }

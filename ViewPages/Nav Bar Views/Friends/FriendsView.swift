@@ -4,139 +4,156 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct Friend: Identifiable {
     var id = UUID()
     var name: String
+    var userId: String = "" // Added userId property
 }
 
 struct FriendsView: View {
-    @State private var expandedFriend: UUID? = nil
-    @State private var friends: [Friend] = [
-        Friend(name: "Ash"),
-        Friend(name: "Misty"),
-        Friend(name: "Brock"),
-        Friend(name: "Pikachu"),
-        Friend(name: "Charizard")
-    ]
+    @StateObject private var chatService = ChatService()
+    @State private var isLoading = true
+    @State private var showingNewChatSheet = false
+    @State private var errorMessage: String? = nil
+    @State private var hasInitialized = false
     
-    @State private var searchText = ""
-    @State private var newFriendName = ""
-
-    var filteredFriends: [Friend] {
-        if searchText.isEmpty {
-            return friends
-        } else {
-            return friends.filter { $0.name.lowercased().contains(searchText.lowercased()) }
-        }
-    }
-
     var body: some View {
         NavigationView {
-            VStack {
-                HStack {
-                    TextField("Search friends list...", text: $searchText)
+            Group {
+                if isLoading {
+                    ProgressView("Loading chats...")
+                } else if let error = errorMessage {
+                    VStack(spacing: 20) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        
+                        Text("Error loading chats")
+                            .font(.headline)
+                        
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        Button("Try Again") {
+                            loadChats()
+                        }
                         .padding()
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color.blue)
+                        .foregroundColor(.white)
                         .cornerRadius(10)
-                        .padding(.horizontal)
-                    
-                    Button(action: addNewFriend) {
-                        Label("", systemImage: "person.fill.badge.plus")
+                    }
+                    .padding()
+                } else if chatService.chats.isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "message.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray.opacity(0.5))
                             .padding()
-                            .background(Color.green)
+                        
+                        Text("No chats yet")
+                            .font(.headline)
+                        
+                        Text("Start a new conversation by tapping the button in the top right")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        Button(action: {
+                            showingNewChatSheet = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("New Chat")
+                            }
+                            .padding()
+                            .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(10)
+                        }
                     }
-                    .padding(.horizontal)
+                    .padding()
+                } else {
+                    List {
+                        ForEach(chatService.chats) { chat in
+                            NavigationLink(destination: ChatView(friend: Friend(name: chat.otherParticipantName(currentUserId: chatService.currentUserId), userId: chat.otherParticipantId(currentUserId: chatService.currentUserId)))) {
+                                ChatRowView(chat: chat, currentUserId: chatService.currentUserId)
+                            }
+                            .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(PlainListStyle())
+                    .refreshable {
+                        loadChats()
+                    }
                 }
-
-                List(filteredFriends) { friend in
-                    FriendRow(friend: friend, expandedFriend: $expandedFriend)
-                }
-                .listStyle(PlainListStyle())
             }
-            .navigationTitle("Friends List")
+            .navigationTitle("Friends & Chats")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingNewChatSheet = true
+                    }) {
+                        Image(systemName: "square.and.pencil")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNewChatSheet) {
+                // Only reload chats after dismissing the sheet if a new chat was created
+                if chatService.needsRefresh {
+                    loadChats()
+                    chatService.needsRefresh = false
+                }
+            } content: {
+                NewChatView(chatService: chatService, isPresented: $showingNewChatSheet)
+            }
             .onAppear {
-                expandedFriend = nil
+                // Only initialize once when the view first appears
+                if !hasInitialized {
+                    initializeView()
+                    hasInitialized = true
+                }
+            }
+            .onDisappear {
+                // Don't clean up listeners when just navigating to a chat
+                // This will be handled when the app is backgrounded or the view is removed
             }
         }
     }
-
-    func addNewFriend() {
-        guard !newFriendName.isEmpty else { return }
-        friends.append(Friend(name: newFriendName))
-        newFriendName = ""
-    }
-}
-
-struct FriendRow: View {
-    let friend: Friend
-    @Binding var expandedFriend: UUID?
-
-    var body: some View {
-        ZStack {
-            VStack {
-                HStack {
-                    Text(friend.name)
-                        .font(.headline)
-                        .padding(.vertical, 10)
-
-                    Spacer()
-
-                    Image(systemName: expandedFriend == friend.id ? "chevron.up" : "chevron.down")
-                        .rotationEffect(.degrees(expandedFriend == friend.id ? 180 : 0))
-                        .animation(.easeInOut, value: expandedFriend)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation {
-                        expandedFriend = expandedFriend == friend.id ? nil : friend.id
-                    }
-                }
-
-                if expandedFriend == friend.id {
-                    Spacer().frame(height: 50)
-                }
-            }
-
-            if expandedFriend == friend.id {
-                VStack {
-                    Spacer()
-
-                    HStack(spacing: 10) {
-                        Button(action: {}) {
-                            Text("Chat")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                        .background(
-                            NavigationLink(destination: ChatView(friend: friend)) {
-                                EmptyView()
-                            }
-                        )
-
-                        Button(action: {}) {
-                            Text("Trade")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.orange)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                        .background(
-                            NavigationLink(destination: TradeView(friend: friend)) {
-                                EmptyView()
-                            }
-                        )
-                    }
-
-                }
+    
+    private func initializeView() {
+        isLoading = true
+        errorMessage = nil
+        
+        // Ensure user data exists in Firestore
+        chatService.ensureUserDataInFirestore { success in
+            if success {
+                loadChats()
+            } else {
+                errorMessage = "Failed to setup user data"
+                isLoading = false
             }
         }
-        .padding(.vertical, 5)
+    }
+    
+    private func loadChats() {
+        isLoading = true
+        errorMessage = nil
+        
+        // Add a bit of delay to ensure UI feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // First clean up any existing listeners to avoid duplicates
+            chatService.cleanup()
+            
+            // Then load chats
+            chatService.loadChats()
+            isLoading = false
+        }
     }
 }
