@@ -254,32 +254,48 @@ struct CollectionView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
-                HStack {
-                    TextField("Search", text: $searchQuery)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                }
-                .padding(.top)
-                
-                HStack {
-                    Picker("Type", selection: $selectedType) {
-                        Text("All Types").tag(nil as String?)
-                        ForEach(uniqueTypes(), id: \..self) { type in
-                            Text(type).tag(type as String?)
+            VStack(spacing: 0) {
+                VStack {
+                    HStack {
+                        TextField("Search...", text: $searchQuery)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .overlay(RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.white, lineWidth: 2))
+                            .foregroundColor(Color.white)
+
+                        
+                        Button(action: addCardButtonTapped) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Card")
+                            }
+                            .padding(8)
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                         }
                     }
-                    .pickerStyle(MenuPickerStyle())
+                    .padding(.horizontal)
                     
-                    Picker("Year", selection: $selectedYear) {
-                        Text("All Years").tag(nil as String?)
-                        ForEach(uniqueYears(), id: \..self) { year in
-                            Text(year).tag(year as String?)
+                    HStack {
+                        Picker("Type", selection: $selectedType) {
+                            Text("All Types").tag(nil as String?)
+                            ForEach(uniqueTypes(), id: \.self) { type in
+                                Text(type).tag(type as String?)
+                            }
                         }
+                        .pickerStyle(MenuPickerStyle())
+
+                        Picker("Year", selection: $selectedYear) {
+                            Text("All Years").tag(nil as String?)
+                            ForEach(uniqueYears(), id: \.self) { year in
+                                Text(year).tag(year as String?)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
                     }
-                    .pickerStyle(MenuPickerStyle())
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
                 
                 if firebaseManager.isLoading {
                     ProgressView("Loading your collection...")
@@ -318,10 +334,10 @@ struct CollectionView: View {
                                             .foregroundColor(.gray)
                                         Text("Types: \(card.types.joined(separator: ", "))")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(.gray)
                                         Text("Added: \(formattedDate(card.dateAdded))")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(.gray)
                                     }
                                     .padding(.leading, 8)
 
@@ -332,25 +348,13 @@ struct CollectionView: View {
                                 }
                                 .padding(.vertical, 4)
                             }
+                            .listRowBackground(Color.white)
                         }
                         .onDelete(perform: deleteCards)
                     }
+                    .background(Color.white)
                     .listStyle(InsetGroupedListStyle())
-
                 }
-                
-                Button(action: addCardButtonTapped) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Card")
-                    }
-                    .frame(minWidth: 200)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                .padding(.bottom)
             }
             .navigationTitle("Your Collection")
             .sheet(item: $selectedCard) { card in
@@ -427,8 +431,9 @@ struct SearchPage: View {
         NavigationView {
             VStack {
                 HStack {
-                    TextField("Search for a Pokémon card", text: $searchQuery)
+                    TextField("Search for a Pokémon card...", text: $searchQuery)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .foregroundColor(Color.white)
                     
                     Button(action: {
                         viewModel.searchCards(query: searchQuery)
@@ -436,7 +441,7 @@ struct SearchPage: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.white)
                             .padding(8)
-                            .background(Color.blue)
+                            .background(Color.red)
                             .cornerRadius(8)
                     }
                 }
@@ -445,13 +450,14 @@ struct SearchPage: View {
                 if viewModel.isLoading {
                     Spacer()
                     ProgressView("Searching...")
+                        .foregroundColor(Color.white)
                     Spacer()
                 } else if let errorMessage = viewModel.errorMessage {
                     Spacer()
                     VStack {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 50))
-                            .foregroundColor(.orange)
+                            .foregroundColor(.red)
                             .padding()
                         Text(errorMessage)
                             .multilineTextAlignment(.center)
@@ -468,13 +474,15 @@ struct SearchPage: View {
                             .frame(width: 70, height: 100)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(card.name).font(.headline)
+                                Text(card.name)
+                                    .font(.headline)
+                                    .foregroundColor(Color.black)
                                 Text("Release Date: \(card.releaseDate)")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                                 Text("Types: \(card.types ?? [""])")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.gray)
                             }
                             .padding(.leading, 8)
                             
@@ -484,12 +492,16 @@ struct SearchPage: View {
                                 addCardToCollection(card)
                             }) {
                                 Image(systemName: "plus.circle")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.red)
                                     .font(.title2)
                             }
                         }
                         .padding(.vertical, 4)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(8)
                     }
+                    .listStyle(PlainListStyle())
                 }
             }
             .navigationTitle("Search Cards")
@@ -505,6 +517,7 @@ struct SearchPage: View {
                 )
             }
         }
+        .foregroundColor(Color.red)
     }
     
     private func addCardToCollection(_ card: SearchedPokemonCard) {
@@ -543,22 +556,23 @@ struct CardDetailView: View {
                     Text(card.name)
                         .font(.largeTitle)
                         .fontWeight(.bold)
+                        .foregroundColor(Color.red)
                     
                     Text("Release Date: \(card.releaseDate)")
                         .font(.title2)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.white)
                     
                     if !card.types.isEmpty {
                         Text("Types: \(card.types.joined(separator: ", "))")
                             .font(.title2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white)
                     }
                     
                     Spacer()
                     
                     Text("Date Added: \(formattedDate(card.dateAdded))")
                         .font(.title3)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.gray)
                 }
                 .padding()
                 Spacer()
