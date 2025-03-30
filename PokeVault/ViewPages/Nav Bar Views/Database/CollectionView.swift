@@ -8,231 +8,17 @@ import Firebase
 import FirebaseFirestore
 import FirebaseAuth
 
-struct PokemonCard: Identifiable, Codable {
-    @DocumentID var id: String?
-    let name: String
-    let imageUrl: String
-    let releaseDate: String
-    let dateAdded: Date
-    
-    init(id: String? = nil, name: String, imageUrl: String, releaseDate: String, dateAdded: Date = Date()) {
-        self.id = id
-        self.name = name
-        self.imageUrl = imageUrl
-        self.releaseDate = releaseDate
-        self.dateAdded = dateAdded
-    }
-}
-
-struct SearchedPokemonCard {
-    let name: String
-    let imageUrl: String
-    let releaseDate: String
-}
-
-struct PokemonResponse: Codable {
-    let data: [PokemonData]
-}
-
-struct PokemonData: Codable {
-    let name: String
-    let images: PokemonImages
-    let set: PokemonSet
-}
-
-struct PokemonImages: Codable {
-    let small: String
-}
-
-struct PokemonSet: Codable {
-    let releaseDate: String
-}
-
-class FirebaseManager: ObservableObject {
-    @Published var collection: [PokemonCard] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
-    
-    private let db = Firestore.firestore()
-    private var userId: String? { Auth.auth().currentUser?.uid }
-    private var listener: ListenerRegistration?
-    
-    init() {
-        setupAuthListener()
-    }
-    
-    private func setupAuthListener() {
-        Auth.auth().addStateDidChangeListener { [weak self] (_, user) in
-            if user != nil {
-                self?.fetchCollection()
-            } else {
-                self?.collection = []
-                self?.removeListener()
-            }
-        }
-    }
-    
-    private func removeListener() {
-        listener?.remove()
-        listener = nil
-    }
-    
-    func addCard(_ card: PokemonCard) {
-        guard let userId = userId else {
-            self.errorMessage = "User not authenticated. Please log in."
-            return
-        }
-        
-        isLoading = true
-        
-        let collectionRef = db.collection("users").document(userId).collection("pokemon_cards")
-        
-        let cardData: [String: Any] = [
-            "name": card.name,
-            "imageUrl": card.imageUrl,
-            "releaseDate": card.releaseDate,
-            "dateAdded": Timestamp(date: card.dateAdded)
-        ]
-        
-        collectionRef.addDocument(data: cardData) { [weak self] error in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                
-                if let error = error {
-                    print("Error adding card: \(error.localizedDescription)")
-                    self?.errorMessage = "Failed to add card: \(error.localizedDescription)"
-                } else {
-                    print("Card successfully added to Firestore!")
-                }
-            }
-        }
-    }
-    
-    func fetchCollection() {
-        guard let userId = userId else {
-            self.errorMessage = "User not authenticated. Please log in."
-            return
-        }
-        
-        isLoading = true
-        
-        removeListener()
-        
-        let collectionRef = db.collection("users").document(userId).collection("pokemon_cards")
-            .order(by: "dateAdded", descending: true)
-        
-        listener = collectionRef.addSnapshotListener { [weak self] snapshot, error in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                
-                if let error = error {
-                    print("Error fetching collection: \(error.localizedDescription)")
-                    self?.errorMessage = "Failed to fetch collection: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let documents = snapshot?.documents else { return }
-                
-                self?.collection = documents.compactMap { doc -> PokemonCard? in
-                    try? doc.data(as: PokemonCard.self)
-                }
-            }
-        }
-    }
-    
-    func deleteCard(at indexSet: IndexSet) {
-        guard let userId = userId else { return }
-
-        let cardsToDelete = indexSet.map { collection[$0] }
-        
-        for card in cardsToDelete {
-            if let id = card.id {
-                let docRef = db.collection("users").document(userId).collection("pokemon_cards").document(id)
-                docRef.delete { error in
-                    if let error = error {
-                        print("Error removing card: \(error.localizedDescription)")
-                    } else {
-                        print("Card successfully removed!")
-                    }
-                }
-            }
-        }
-    }
-    
-    deinit {
-        removeListener()
-    }
-}
-
-class PokemonSearchViewModel: ObservableObject {
-    @Published var cards: [SearchedPokemonCard] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
-    
-    private let apiKey = "YOUR-API-KEY"
-
-    func searchCards(query: String) {
-        guard !query.isEmpty else {
-            cards = []
-            return
-        }
-        
-        isLoading = true
-        errorMessage = nil
-        
-        let formattedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let url = URL(string: "https://api.pokemontcg.io/v2/cards?q=name:\"\(formattedQuery)\"")!
-        
-        var request = URLRequest(url: url)
-        request.setValue(apiKey, forHTTPHeaderField: "X-Api-Key")
-        
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                
-                if let error = error {
-                    self?.errorMessage = "Network error: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let data = data else {
-                    self?.errorMessage = "No data received from server"
-                    return
-                }
-                
-                do {
-                    let response = try JSONDecoder().decode(PokemonResponse.self, from: data)
-                    self?.cards = response.data.map { card in
-                        SearchedPokemonCard(
-                            name: card.name,
-                            imageUrl: card.images.small,
-                            releaseDate: card.set.releaseDate
-                        )
-                    }
-                    
-                    if response.data.isEmpty {
-                        self?.errorMessage = "No results found for '\(query)'"
-                    }
-                } catch {
-                    print("Error parsing data: \(error.localizedDescription)")
-                    self?.errorMessage = "Error parsing data: \(error.localizedDescription)"
-                }
-            }
-        }.resume()
-    }
-}
-
 struct CollectionView: View {
-    @StateObject private var firebaseManager = FirebaseManager()
+    @ObservedObject private var pokemonManager = PokemonManager()
     @State private var isSearchPagePresented = false
     @State private var showingLoginAlert = false
     
     var body: some View {
         NavigationView {
             VStack {
-                if firebaseManager.isLoading {
+                if pokemonManager.isLoading {
                     ProgressView("Loading your collection...")
-                } else if firebaseManager.collection.isEmpty {
+                } else if pokemonManager.collection.isEmpty {
                     VStack(spacing: 20) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 50))
@@ -245,7 +31,7 @@ struct CollectionView: View {
                     .padding()
                 } else {
                     List {
-                        ForEach(firebaseManager.collection) { card in
+                        ForEach(pokemonManager.collection) { card in
                             HStack {
                                 AsyncImage(url: URL(string: card.imageUrl)) { image in
                                     image
@@ -305,7 +91,7 @@ struct CollectionView: View {
                 )
             }
             .sheet(isPresented: $isSearchPagePresented) {
-                SearchPage(firebaseManager: firebaseManager)
+                SearchPage(pokemonManager: pokemonManager)
             }
             .onAppear {
                 if Auth.auth().currentUser == nil {
@@ -331,11 +117,11 @@ struct CollectionView: View {
     }
     
     private func refreshCollection() {
-        firebaseManager.fetchCollection()
+        pokemonManager.fetchCollection()
     }
     
     private func deleteCards(at offsets: IndexSet) {
-        firebaseManager.deleteCard(at: offsets)
+        pokemonManager.deleteCard(at: offsets)
     }
 }
 
@@ -343,7 +129,7 @@ struct SearchPage: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var searchQuery = ""
     @StateObject private var viewModel = PokemonSearchViewModel()
-    @ObservedObject var firebaseManager: FirebaseManager
+    @ObservedObject var pokemonManager: PokemonManager
     @State private var showingAddConfirmation = false
     @State private var lastAddedCard: String?
     
@@ -436,7 +222,7 @@ struct SearchPage: View {
             dateAdded: Date()
         )
         
-        firebaseManager.addCard(newCard)
+        pokemonManager.addCard(newCard)
         lastAddedCard = card.name
         showingAddConfirmation = true
     }

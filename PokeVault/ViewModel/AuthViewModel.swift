@@ -163,7 +163,7 @@ class AuthViewModel: ObservableObject {
             }
             
             // Create the chats subcollection with a placeholder document
-            FirebaseManager.shared.createChatCollection(userId: user.uid) { success in
+            FirebaseService.shared.createChatCollection(userId: user.uid) { success in
                 if success {
                     print("User setup complete with chats collection")
                     completion(true)
