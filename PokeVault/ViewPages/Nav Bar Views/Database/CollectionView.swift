@@ -14,12 +14,14 @@ struct PokemonCard: Identifiable, Codable {
     let imageUrl: String
     let releaseDate: String
     let dateAdded: Date
+    let types: [String]
     
-    init(id: String? = nil, name: String, imageUrl: String, releaseDate: String, dateAdded: Date = Date()) {
+    init(id: String? = nil, name: String, imageUrl: String, releaseDate: String, types: [String], dateAdded: Date = Date()) {
         self.id = id
         self.name = name
         self.imageUrl = imageUrl
         self.releaseDate = releaseDate
+        self.types = types
         self.dateAdded = dateAdded
     }
 }
@@ -28,6 +30,7 @@ struct SearchedPokemonCard {
     let name: String
     let imageUrl: String
     let releaseDate: String
+    let types: [String]?
 }
 
 struct PokemonResponse: Codable {
@@ -38,6 +41,14 @@ struct PokemonData: Codable {
     let name: String
     let images: PokemonImages
     let set: PokemonSet
+    let types: [String]?
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case images
+        case set
+        case types
+    }
 }
 
 struct PokemonImages: Codable {
@@ -91,7 +102,8 @@ class FirebaseManager: ObservableObject {
             "name": card.name,
             "imageUrl": card.imageUrl,
             "releaseDate": card.releaseDate,
-            "dateAdded": Timestamp(date: card.dateAdded)
+            "dateAdded": Timestamp(date: card.dateAdded),
+            "types": card.types
         ]
         
         collectionRef.addDocument(data: cardData) { [weak self] error in
@@ -206,7 +218,8 @@ class PokemonSearchViewModel: ObservableObject {
                         SearchedPokemonCard(
                             name: card.name,
                             imageUrl: card.images.small,
-                            releaseDate: card.set.releaseDate
+                            releaseDate: card.set.releaseDate,
+                            types: card.types
                         )
                     }
                     
@@ -226,10 +239,48 @@ struct CollectionView: View {
     @StateObject private var firebaseManager = FirebaseManager()
     @State private var isSearchPagePresented = false
     @State private var showingLoginAlert = false
+    @State private var selectedCard: PokemonCard?
+    @State private var searchQuery = ""
+    @State private var selectedType: String? = nil
+    @State private var selectedYear: String? = nil
+    
+    var filteredCollection: [PokemonCard] {
+        firebaseManager.collection.filter { card in
+            (searchQuery.isEmpty || card.name.lowercased().contains(searchQuery.lowercased())) &&
+            (selectedType == nil || card.types.contains(selectedType!)) &&
+            (selectedYear == nil || card.releaseDate.contains(selectedYear!))
+        }
+    }
     
     var body: some View {
         NavigationView {
             VStack {
+                HStack {
+                    TextField("Search", text: $searchQuery)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                }
+                .padding(.top)
+                
+                HStack {
+                    Picker("Type", selection: $selectedType) {
+                        Text("All Types").tag(nil as String?)
+                        ForEach(uniqueTypes(), id: \..self) { type in
+                            Text(type).tag(type as String?)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    
+                    Picker("Year", selection: $selectedYear) {
+                        Text("All Years").tag(nil as String?)
+                        ForEach(uniqueYears(), id: \..self) { year in
+                            Text(year).tag(year as String?)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+                .padding(.horizontal)
+                
                 if firebaseManager.isLoading {
                     ProgressView("Loading your collection...")
                 } else if firebaseManager.collection.isEmpty {
@@ -245,33 +296,47 @@ struct CollectionView: View {
                     .padding()
                 } else {
                     List {
-                        ForEach(firebaseManager.collection) { card in
-                            HStack {
-                                AsyncImage(url: URL(string: card.imageUrl)) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                } placeholder: {
-                                    ProgressView()
-                                }
-                                .frame(width: 70, height: 100)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(card.name).font(.headline)
-                                    Text("Release Date: \(card.releaseDate)")
-                                        .font(.subheadline)
+                        ForEach(filteredCollection) { card in
+                            Button(action: {
+                                selectedCard = card
+                            }) {
+                                HStack {
+                                    AsyncImage(url: URL(string: card.imageUrl)) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFit()
+                                    } placeholder: {
+                                        ProgressView()
+                                    }
+                                    .frame(width: 70, height: 100)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(card.name).font(.headline)
+                                            .foregroundColor(Color.black)
+                                        Text("Release Date: \(card.releaseDate)")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                        Text("Types: \(card.types.joined(separator: ", "))")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text("Added: \(formattedDate(card.dateAdded))")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.leading, 8)
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
                                         .foregroundColor(.gray)
-                                    Text("Added: \(formattedDate(card.dateAdded))")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
                                 }
-                                .padding(.leading, 8)
+                                .padding(.vertical, 4)
                             }
-                            .padding(.vertical, 4)
                         }
                         .onDelete(perform: deleteCards)
                     }
                     .listStyle(InsetGroupedListStyle())
+
                 }
                 
                 Button(action: addCardButtonTapped) {
@@ -288,6 +353,9 @@ struct CollectionView: View {
                 .padding(.bottom)
             }
             .navigationTitle("Your Collection")
+            .sheet(item: $selectedCard) { card in
+                CardDetailView(card: card)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: refreshCollection) {
@@ -320,6 +388,14 @@ struct CollectionView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+    
+    private func uniqueTypes() -> [String] {
+        Set(firebaseManager.collection.flatMap { $0.types }).sorted()
+    }
+    
+    private func uniqueYears() -> [String] {
+        Set(firebaseManager.collection.map { String($0.releaseDate.prefix(4)) }).sorted()
     }
     
     private func addCardButtonTapped() {
@@ -396,6 +472,9 @@ struct SearchPage: View {
                                 Text("Release Date: \(card.releaseDate)")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
+                                Text("Types: \(card.types ?? [""])")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                             .padding(.leading, 8)
                             
@@ -433,11 +512,66 @@ struct SearchPage: View {
             name: card.name,
             imageUrl: card.imageUrl,
             releaseDate: card.releaseDate,
+            types: card.types ?? [""],
             dateAdded: Date()
         )
         
         firebaseManager.addCard(newCard)
         lastAddedCard = card.name
         showingAddConfirmation = true
+    }
+}
+
+
+struct CardDetailView: View {
+    let card: PokemonCard
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .center) {
+                AsyncImage(url: URL(string: card.imageUrl)) { image in
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: 400)
+                } placeholder: {
+                    ProgressView()
+                }
+                .padding()
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(card.name)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("Release Date: \(card.releaseDate)")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                    
+                    if !card.types.isEmpty {
+                        Text("Types: \(card.types.joined(separator: ", "))")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("Date Added: \(formattedDate(card.dateAdded))")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                Spacer()
+            }
+        }
+        .navigationTitle("Card Details")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
     }
 }
